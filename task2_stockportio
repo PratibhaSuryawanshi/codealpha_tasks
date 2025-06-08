@@ -1,0 +1,93 @@
+import yfinance as yf
+from tabulate import tabulate
+
+portfolio = {}
+
+def add_stock(ticker, quantity, buy_price):
+    ticker = ticker.upper()
+    if ticker in portfolio:
+        portfolio[ticker]['quantity'] += quantity
+        portfolio[ticker]['buy_price'] = (portfolio[ticker]['buy_price'] + buy_price) / 2
+    else:
+        portfolio[ticker] = {'quantity': quantity, 'buy_price': buy_price}
+    print(f"{quantity} shares of {ticker} added at ${buy_price:.2f}.")
+
+def remove_stock(ticker):
+    ticker = ticker.upper()
+    if ticker in portfolio:
+        del portfolio[ticker]
+        print(f"{ticker} removed from portfolio.")
+    else:
+        print(f"{ticker} not found.")
+
+def fetch_current_price(ticker):
+    stock = yf.Ticker(ticker)
+    data = stock.history(period="1d")
+    if not data.empty:
+        return data['Close'][0]
+    else:
+        return None
+
+def view_portfolio():
+    if not portfolio:
+        print("Portfolio is empty.")
+        return
+
+    table = []
+    total_investment = 0
+    total_current_value = 0
+
+    for ticker, info in portfolio.items():
+        current_price = fetch_current_price(ticker)
+        if current_price is None:
+            continue
+
+        quantity = info['quantity']
+        buy_price = info['buy_price']
+        invested = quantity * buy_price
+        current_value = quantity * current_price
+        gain_loss = current_value - invested
+
+        table.append([
+            ticker, quantity, f"${buy_price:.2f}", f"${current_price:.2f}",
+            f"${invested:.2f}", f"${current_value:.2f}", f"${gain_loss:.2f}"
+        ])
+
+        total_investment += invested
+        total_current_value += current_value
+
+    print(tabulate(
+        table,
+        headers=["Ticker", "Qty", "Buy Price", "Current Price", "Invested", "Current Value", "P/L"]
+    ))
+    print(f"\nTotal Invested: ${total_investment:.2f}")
+    print(f"Total Value: ${total_current_value:.2f}")
+    print(f"Overall Gain/Loss: ${total_current_value - total_investment:.2f}")
+
+def main():
+    while True:
+        print("\n=== Stock Portfolio Tracker ===")
+        print("1. Add Stock")
+        print("2. Remove Stock")
+        print("3. View Portfolio")
+        print("4. Exit")
+        choice = input("Enter choice: ")
+
+        if choice == '1':
+            ticker = input("Enter stock ticker: ")
+            quantity = int(input("Enter quantity: "))
+            buy_price = float(input("Enter buy price per share: "))
+            add_stock(ticker, quantity, buy_price)
+        elif choice == '2':
+            ticker = input("Enter stock ticker to remove: ")
+            remove_stock(ticker)
+        elif choice == '3':
+            view_portfolio()
+        elif choice == '4':
+            print("Exiting...")
+            break
+        else:
+            print("Invalid choice. Try again.")
+
+if __name__ == "__main__":
+    main()

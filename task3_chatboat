@@ -1,0 +1,77 @@
+import nltk
+nltk.data.path.append("C:/Users/Admin/AppData/Roaming/nltk_data")
+nltk.download('punkt')
+nltk.download('punkt_tab')  # <- ADD THIS LINE
+nltk.download('wordnet')
+
+from nltk.stem import WordNetLemmatizer
+import random
+import json
+
+
+# Sample intents for chatbot
+intents = {
+    "intents": [
+        {
+            "tag": "greeting",
+            "patterns": ["Hi", "Hello", "Hey", "Good morning", "Good evening"],
+            "responses": ["Hello!", "Hi there!", "Hey!", "How can I help you?"]
+        },
+        {
+            "tag": "goodbye",
+            "patterns": ["Bye", "See you", "Goodbye", "Take care"],
+            "responses": ["Goodbye!", "See you later!", "Take care!"]
+        },
+        {
+            "tag": "thanks",
+            "patterns": ["Thanks", "Thank you", "That's helpful"],
+            "responses": ["You're welcome!", "Glad to help!", "Anytime!"]
+        },
+        {
+            "tag": "age",
+            "patterns": ["How old are you?", "What's your age?"],
+            "responses": ["I'm a bot, I don’t age!", "I'm timeless."]
+        },
+        {
+            "tag": "name",
+            "patterns": ["What's your name?", "Who are you?"],
+            "responses": ["I'm ChatBot!", "You can call me ChatBot."]
+        },
+        {
+            "tag": "noanswer",
+            "patterns": [],
+            "responses": ["I'm not sure I understand.", "Can you rephrase that?", "I don't know about that."]
+        }
+    ]
+}
+
+lemmatizer = WordNetLemmatizer()
+
+def tokenize_and_lemmatize(sentence):
+    tokens = nltk.word_tokenize(sentence.lower())
+    return [lemmatizer.lemmatize(word) for word in tokens]
+
+def match_intent(user_input):
+    words = tokenize_and_lemmatize(user_input)
+
+    for intent in intents["intents"]:
+        for pattern in intent["patterns"]:
+            pattern_words = tokenize_and_lemmatize(pattern)
+            if any(word in words for word in pattern_words):
+                return random.choice(intent["responses"])
+    
+    return random.choice(intents["intents"][-1]["responses"])  # Fallback
+
+def chat():
+    print("ChatBot: Hello! Type 'quit' to exit.")
+    while True:
+        user_input = input("You: ")
+        if user_input.lower() == "quit":
+            print("ChatBot: Bye! Have a great day.")
+            break
+
+        response = match_intent(user_input)
+        print("ChatBot:", response)
+
+if __name__ == "__main__":
+    chat()
